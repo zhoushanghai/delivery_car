@@ -88,18 +88,24 @@ void wave(void)
 	// car.GrayscaleData = gw_gray_serial_read(GW_GRAY_SERIAL_GPIO_GROUP, GW_GRAY_SERIAL_GPIO_CLK, GW_GRAY_SERIAL_GPIO_DAT);
 	// printf("%d\r\n", car.GrayscaleData);
 	// get_gray_data();
-
-	printf("gray:%d\r\n", car.GrayVal);
+	// 灰度值
+	//  printf("gray:%d\r\n", car.GrayVal);
 
 	// printf("%d,%d,%.2f,%.2f\r\n", car.gyro_x, car.gyro_y, (float)car.gyro_z - car.ZgyOFFSET, -pid.speed_l.output + pid.angSpe.output);
 	// printf("%d,%.2f,%.2f\r\n", car.status, car.turn_set, car.dis_set);
+
+	// 巡线数据
+	// printf("XX%f\r\n", pid.gray.output);
 }
 
+#define FILTER 0.4f
 void TIM7_IRQHandler(void)
 {
 	static float yaw_m;
 	static int i = 0;
 	static uint8_t en_cnt = 0, gray_cnt = 0;
+
+	static float speed_l_M = 0, speed_r_M = 0;
 	float yaw_PID;
 	if (TIM_GetITStatus(TIM7, TIM_IT_Update) == SET)
 	{
@@ -134,12 +140,19 @@ void TIM7_IRQHandler(void)
 				// turn
 				// PID_Positional(&pid.angSpe, pid.gray.output, (float)car.gyro_z - car.ZgyOFFSET);
 				PID_Positional(&pid.angSpe, 0, (float)car.gyro_z - car.ZgyOFFSET);
+				// 一阶滤波
+				speed_l_M += FILTER * (pid.dis.output + pid.angSpe.output + pid.gray.output - speed_l_M);
+				speed_r_M += FILTER * (pid.dis.output - pid.angSpe.output - pid.gray.output - speed_r_M);
 
-				PID_Incremental(&pid.speed_l, pid.dis.output + pid.angSpe.output, car.l_speed);
-				PID_Incremental(&pid.speed_r, pid.dis.output - pid.angSpe.output, car.r_speed);
+				// PID_Incremental(&pid.speed_l, pid.dis.output + pid.angSpe.output + pid.gray.output, car.l_speed);
+				// PID_Incremental(&pid.speed_r, pid.dis.output - pid.angSpe.output - pid.gray.output, car.r_speed);
 
-				pid.speed_l.output += pid.gray.output;
-				pid.speed_r.output -= pid.gray.output;
+				PID_Incremental(&pid.speed_l, speed_l_M, car.l_speed);
+				PID_Incremental(&pid.speed_r, speed_r_M, car.r_speed);
+
+				// pid.speed_l.output += pid.gray.output;
+				// pid.speed_r.output -= pid.gray.output;
+				printf("%.2f,%.2f\r\n", speed_l_M, speed_r_M);
 
 				if (abs_float(car.dis_set) <= abs_float((float)(car.l_distanc + car.r_distanc) / 2.0f))
 				{
@@ -204,6 +217,7 @@ void data_show(void)
 
 void software_init(void)
 {
+	flag_G.wave = 1;
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // 设置系统中断优先级分组2
 	delay_init(168);								// 初始化延时函数
 
@@ -236,7 +250,6 @@ void software_init(void)
 	gyroOffset_init(); // 陀螺仪零飘初始化
 	spl_gw_gray_serial_init();
 	//(‵▽′)/////////////////////////////////////  ////////////////////////////////////////////
-	flag_G.wave = 0;
 
 	TIM4_Random_Init(1000 - 1, 84 - 1); // ms定时器
 	TIM7_Random_Init(5000 - 1, 84 - 1); // 5ms定时器

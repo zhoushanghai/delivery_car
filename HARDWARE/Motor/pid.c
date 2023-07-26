@@ -13,7 +13,7 @@ void PID_set(void)
     PID_Init(&pid.speed_r, SPEED_P, SPEED_I - 200.0f, SPEED_D, 0.0, 10000);
     PID_Init(&pid.dis, DIS_P, DIS_I, DIS_D, 0.0, 0.3);
 
-    PID_Init(&pid.angle, ANGLE_P, ANGLE_I, ANGLE_D, 0.0, 0.3);
+    PID_Init(&pid.angle, ANGLE_P, ANGLE_I, ANGLE_D, 0.0, 0.6);
 
     PID_Init(&pid.angSpe, ANGSPE_P, ANGSPE_I, ANGSPE_D, 0.0, 0.6);
 

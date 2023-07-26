@@ -1,3 +1,11 @@
+/*
+ * @Author: hz 1281989921@qq.com
+ * @Date: 2023-07-26 20:01:05
+ * @LastEditors: hz 1281989921@qq.com
+ * @LastEditTime: 2023-07-26 21:11:17
+ * @FilePath: \USERe:\桌面\送药小车\HARDWARE\Motor\pid.h
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 #ifndef __PID_H__
 #define __PID_H__
 #include "sys.h"
@@ -22,9 +30,9 @@
 // #define GRAY_P 300.0f
 // #define GRAY_I -0.0f
 // #define GRAY_D 100.0f
-#define GRAY_P 0.2f
+#define GRAY_P -0.08f
 #define GRAY_I -0.0f
-#define GRAY_D 0.05f
+#define GRAY_D -0.01f
 //(‵▽′)///////////////////////////////////// 自定义结构体 ////////////////////////////////////////////
 typedef enum
 {
