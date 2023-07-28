@@ -1,11 +1,18 @@
 #include "sys.h"
 #include "usart.h"
 #include "pid.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 extern CAR_PID pid;
+extern K210 k210;
 
 u8 USART_RX_BUF[USART_REC_LEN]; // 接收缓冲,最大USART_REC_LEN个字节.
 u16 USART_RX_STA = 0;			// 接收状态标记
+
+u8 USART_RX_BUF_U1[10];	 // 接收缓冲,最大USART_REC_LEN个字节.
+u16 USART_RX_STA_U1 = 0; // 接收状态标记
 //////////////////////////////////////////////////////////////////////////////////
 // 如果使用ucos,则包括下面的头文件即可.
 #if SYSTEM_SUPPORT_OS
@@ -14,8 +21,72 @@ u16 USART_RX_STA = 0;			// 接收状态标记
 
 static void analysis_data(u8 *buf);
 static void change_pid(u8 *buf);
+void analysis_k210_data(u8 *buf);
 
 //(‵▽′)/////////////////////////////////////  ////////////////////////////////////////////
+
+void RX_k210data_deal(void)
+{
+	analysis_k210_data(USART_RX_BUF_U1);
+
+	printf("K210Data:%s\r\n", USART_RX_BUF_U1);
+	// 清空缓存
+	for (int i = 0; i < 10; i++)
+	{
+		USART_RX_BUF_U1[i] = '\0';
+	}
+	USART_RX_STA_U1 = 0;
+}
+/*解析来自K210的数据
+数据格式是：
+!x，y@
+*/
+// void analysis_k210_data(u8 *buf)
+// {
+// 	// Step 1: 判断数据格式是否正确
+// 	if (buf[0] != '!' || buf[2] != ',' || buf[4] != '@')
+// 	{
+// 		printf("Invalid data format!\r\n");
+// 		return;
+// 	}
+
+// 	// Step 2: 提取x和y的值
+// 	k210.x = buf[1];
+// 	k210.y = buf[3];
+// 	// Step 3: 处理x和y的值（在这里你可以根据需要进行其他操作）
+// 	printf("x: %c, y: %c\r\n", k210.x, k210.y);
+
+// }
+
+void analysis_k210_data(u8 *buf)
+{
+	char *start_ptr = strchr((char *)buf, '!'); // 找到'!'的位置
+	char *comma_ptr = strchr((char *)buf, ','); // 找到','的位置
+	char *end_ptr = strchr((char *)buf, '@');	// 找到'@'的位置
+
+	if (start_ptr != NULL && comma_ptr != NULL && end_ptr != NULL)
+	{
+		// 检查数据包格式是否正确
+		if (comma_ptr > start_ptr && end_ptr > comma_ptr)
+		{
+			// 提取x和y
+			char x_str[10];
+			char y_str[10];
+			memset(x_str, 0, sizeof(x_str));
+			memset(y_str, 0, sizeof(y_str));
+
+			// 复制x和y的字符串部分
+			strncpy(x_str, start_ptr + 1, comma_ptr - start_ptr - 1);
+			strncpy(y_str, comma_ptr + 1, end_ptr - comma_ptr - 1);
+
+			// 将提取到的x和y转换成数值
+			k210.x = (uint8_t)(atoi(x_str));
+			k210.y = (uint8_t)(atoi(y_str));
+
+			printf("x = %d, y = %d\n", k210.x, k210.y);
+		}
+	}
+}
 
 void RX_data_deal(void)
 {
@@ -322,26 +393,30 @@ void USART1_IRQHandler(void) // 串口1中断服务程序
 	if (USART_GetITStatus(USART1, USART_IT_RXNE) != RESET) // 接收中断(接收到的数据必须是0x0d 0x0a结尾)
 	{
 		Res = USART_ReceiveData(USART1); //(USART1->DR);	//读取接收到的数据
-
-		if ((USART_RX_STA & 0x8000) == 0) // 接收未完成
+		if (Res == '@')
 		{
-			if (USART_RX_STA & 0x4000) // 接收到了0x0d
+			flag_G.k210 = 1;
+			// printf("2ss\r\n");
+		}
+		if ((USART_RX_STA_U1 & 0x8000) == 0) // 接收未完成
+		{
+			if (USART_RX_STA_U1 & 0x4000) // 接收到了0x0d
 			{
 				if (Res != 0x0a)
-					USART_RX_STA = 0; // 接收错误,重新开始
+					USART_RX_STA_U1 = 0; // 接收错误,重新开始
 				else
-					USART_RX_STA |= 0x8000; // 接收完成了
+					USART_RX_STA_U1 |= 0x8000; // 接收完成了
 			}
 			else // 还没收到0X0D
 			{
 				if (Res == 0x0d)
-					USART_RX_STA |= 0x4000;
+					USART_RX_STA_U1 |= 0x4000;
 				else
 				{
-					USART_RX_BUF[USART_RX_STA & 0X3FFF] = Res;
-					USART_RX_STA++;
-					if (USART_RX_STA > (USART_REC_LEN - 1))
-						USART_RX_STA = 0; // 接收数据错误,重新开始接收
+					USART_RX_BUF_U1[USART_RX_STA_U1 & 0X3FFF] = Res;
+					USART_RX_STA_U1++;
+					if (USART_RX_STA_U1 > (USART_REC_LEN - 1))
+						USART_RX_STA_U1 = 0; // 接收数据错误,重新开始接收
 				}
 			}
 		}

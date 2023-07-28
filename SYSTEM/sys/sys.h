@@ -113,8 +113,15 @@ typedef struct
     int8_t oled;
     int8_t key;
     int8_t wave;
+    int8_t k210;
 
 } GLO_FLAG;
+
+typedef struct
+{
+    uint8_t x, y;
+
+} K210;
 //(¨F¨Œ¡ä)/////////////////////////////////////  ////////////////////////////////////////////
 
 #define CHECK_FLAG(flag) (*(flag) ? (*(flag) = 0, 1) : 0)
@@ -128,3 +135,4 @@ extern char str[20];
 #define EN2VAL DIS_EN * 100.0f
 
 #endif
+

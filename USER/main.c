@@ -37,6 +37,8 @@ GLO_FLAG flag_G = {.oled = 0};
 KEY key[KEY_NUMBER] = { // 按键
 	{KEY_RELEASE, KEY_RELEASE}};
 
+K210 k210 = {0};
+
 extern CAR_PID pid;
 
 //-----(‵▽′)/---------------------- fun -----------------------------//
@@ -64,6 +66,7 @@ int main(void)
 				wave();
 			RX_data_deal();
 			data_show();
+			// USART_SendData(USART1, 'q');
 		}
 		if (CHECK_FLAG(&flag_G.key))
 		{
@@ -113,7 +116,13 @@ void TIM7_IRQHandler(void)
 	if (TIM_GetITStatus(TIM7, TIM_IT_Update) == SET)
 	{
 		TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
-		if (++en_cnt >= 2)
+		//(‵▽′)///////////////////////////////////// 舵机控制 ////////////////////////////////////////////
+		if (CHECK_FLAG(&flag_G.k210))
+		{
+			RX_k210data_deal();
+		}
+		//(‵▽′)///////////////////////////////////// 小车有刷直流电机控制 ////////////////////////////////////////////
+		if (++en_cnt >= 10)
 		{
 			// static int out_r = 0, out_l = 0;
 			// encoder
@@ -257,7 +266,7 @@ void software_init(void)
 	//(‵▽′)/////////////////////////////////////  ////////////////////////////////////////////
 
 	TIM4_Random_Init(1000 - 1, 84 - 1); // ms定时器
-	TIM7_Random_Init(5000 - 1, 84 - 1); // 5ms定时器
+	TIM7_Random_Init(1000 - 1, 84 - 1); // 5ms定时器
 }
 void key_(void)
 {
@@ -318,17 +327,4 @@ float abs_float(float a)
 		return -a;
 	else
 		return a;
-}
-
-uint8_t check_flag(uint8_t *flag)
-{
-	if (*flag)
-	{
-		*flag = 0;
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
 }
