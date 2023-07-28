@@ -38,9 +38,9 @@ KEY key[KEY_NUMBER] = { // 按键
 	{KEY_RELEASE, KEY_RELEASE}};
 
 extern CAR_PID pid;
+
 //-----(‵▽′)/---------------------- fun -----------------------------//
 void data_show(void);
-void key_KL(void);
 void key_(void);
 void software_init(void);
 void wave(void);
@@ -53,20 +53,21 @@ float angle = 90;
 int main(void)
 {
 	software_init();
-	// Motor_PWM_Load(-9000, 9000);
-
+	PWM_SetServo1(1600);
+	PWM_SetServo2(1595);
 	while (1)
 	{
-		if (flag_G.oled)
+		if (CHECK_FLAG(&flag_G.oled))
 		{
-			flag_G.oled = 0;
+			// flag_G.oled = 0;
 			if (flag_G.wave)
 				wave();
 			RX_data_deal();
+			data_show();
 		}
-		if (flag_G.key)
+		if (CHECK_FLAG(&flag_G.key))
 		{
-			flag_G.key = 0;
+			// flag_G.key = 0;
 			key_();
 			// delay_us(5);
 		}
@@ -91,7 +92,7 @@ void wave(void)
 	// printf("%d\r\n", car.GrayscaleData);
 	// get_gray_data();
 	// 灰度值
-	//  printf("gray:%d\r\n", car.GrayVal);
+	printf("gray:%d\r\n", car.GrayVal);
 
 	// printf("%d,%d,%.2f,%.2f\r\n", car.gyro_x, car.gyro_y, (float)car.gyro_z - car.ZgyOFFSET, -pid.speed_l.output + pid.angSpe.output);
 	// printf("%d,%.2f,%.2f\r\n", car.status, car.turn_set, car.dis_set);
@@ -213,8 +214,9 @@ void TIM7_IRQHandler(void)
 
 void data_show(void)
 {
+	mpu_dmp_get_data(&car.roll, &car.pitch, &car.yaw);
 	sprintf(str, "pit:%5.2f roll:%5.2f yaw:%5.2f", car.pitch, car.roll, car.yaw);
-	// LCD_ShowString(0, 0, str, WHITE, BLACK, 16, 0);
+	LCD_ShowString(0, 0, str, WHITE, BLACK, 16, 0);
 }
 
 void software_init(void)
@@ -245,9 +247,9 @@ void software_init(void)
 
 	//	Beeper_Init(); // 初始化蜂鸣器
 
-	ST7789_Init(); // 屏幕初始化
-
-	// LCD_Color_Fill(0, 0, 240, 240, 0xF800); // 让屏幕刷一个大红色
+	ST7789_Init();						  // 屏幕初始化
+	LCD_Color_Fill(0, 0, 240, 240, CYAN); // 让屏幕刷青色
+	LCD_ShowString(1, 1, "hello world", WHITE, BLACK, 16, 0);
 
 	PID_set();
 	gyroOffset_init(); // 陀螺仪零飘初始化
@@ -316,4 +318,17 @@ float abs_float(float a)
 		return -a;
 	else
 		return a;
+}
+
+uint8_t check_flag(uint8_t *flag)
+{
+	if (*flag)
+	{
+		*flag = 0;
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
 }

@@ -646,5 +646,3 @@ void LCD_ShowPicture(u16 x, u16 y, u16 length, u16 width, const u8 pic[])
 		}
 	}
 }
-
-

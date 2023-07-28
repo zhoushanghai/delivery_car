@@ -10,6 +10,7 @@
 #define __SYS_H
 #include "stm32f4xx.h"
 #include <stdlib.h>
+#include <stdint.h>
 
 // 0,不支持ucos
 // 1,支持ucos
@@ -114,6 +115,9 @@ typedef struct
     int8_t wave;
 
 } GLO_FLAG;
+//(‵▽′)/////////////////////////////////////  ////////////////////////////////////////////
+
+#define CHECK_FLAG(flag) (*(flag) ? (*(flag) = 0, 1) : 0)
 
 //-----(‵▽′)/---------------------- global -----------------------------//
 extern CAR car;
