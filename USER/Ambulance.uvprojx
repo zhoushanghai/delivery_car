@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40 STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\MALLOC;..\USMART;..\HARDWARE\SPI;..\HARDWARE\W25QXX;..\HARDWARE\ST7789;..\HARDWARE\DMA;..\HARDWARE\BEEPER;..\HARDWARE\Random;..\HARDWARE\Key;..\FWLIB\inc;..\HARDWARE\Control;..\HARDWARE\Encoder;..\HARDWARE\PWM;..\HARDWARE\Motor;..\HARDWARE\MPU6050;..\HARDWARE\gray_serial</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\MALLOC;..\USMART;..\HARDWARE\SPI;..\HARDWARE\W25QXX;..\HARDWARE\ST7789;..\HARDWARE\DMA;..\HARDWARE\BEEPER;..\HARDWARE\Random;..\HARDWARE\Key;..\FWLIB\inc;..\HARDWARE\Control;..\HARDWARE\Encoder;..\HARDWARE\PWM;..\HARDWARE\Motor;..\HARDWARE\MPU6050;..\HARDWARE\gray_serial;..\HARDWARE\Servo</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -577,6 +577,16 @@
               <FileName>gw_gray_serial.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\HARDWARE\gray_serial\gw_gray_serial.h</FilePath>
+            </File>
+            <File>
+              <FileName>Servo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\Servo\Servo.c</FilePath>
+            </File>
+            <File>
+              <FileName>Servo.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\HARDWARE\Servo\Servo.h</FilePath>
             </File>
           </Files>
         </Group>

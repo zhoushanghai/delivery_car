@@ -19,6 +19,7 @@
 #include "inv_mpu_dmp_motion_driver.h"
 #include "pid.h"
 #include "gw_gray_serial.h"
+#include "Servo.h"
 //-----(¨F¨Œ¡ä)/----------------------  -----------------------------//
 
 char str[20];
@@ -48,6 +49,7 @@ void RX_data_deal(void);
 float yaw_in180(float yaw);
 float abs_float(float a);
 //(¨F¨Œ¡ä)/////////////////////////////////////////////////////////////////////////////////
+float angle = 90;
 int main(void)
 {
 	software_init();
@@ -227,6 +229,7 @@ void software_init(void)
 	MPU_Init();
 	mpu_dmp_init();
 
+	PWM_TIM1_Init(); // 20ms 50Hz ¶æ»ú
 	PWM_TIM5_Init(8400 - 1, 1 - 1);
 	Encoder_TIM2_Init();
 	Encoder_TIM3_Init();
