@@ -115,7 +115,8 @@ void wave(void)
 	// printf("XX%f\r\n", pid.gray.output);
 
 	// k210 data
-	printf("x%.2f y%.2f out%d\r\n", k210.x, k210.y, (uint16_t)pid.sevor1.output);
+	// printf("x%.2f y%.2f out%d\r\n", k210.x, k210.y, (uint16_t)pid.sevor1.output);
+	printf("%.2f,%.2f\r\n", k210.x, k210.y);
 }
 
 #define FILTER 0.4f
@@ -139,8 +140,6 @@ void TIM7_IRQHandler(void)
 			// pid cal
 			PID_Incremental(&pid.sevor1, 0, k210.y);
 			PID_Incremental(&pid.sevor2, 0, k210.x);
-			uint16_t sevorOut = (uint16_t)pid.sevor1.output;
-			printf("%d\r\n", sevorOut);
 			PWM_SetServo1((uint16_t)pid.sevor1.output);
 			PWM_SetServo2((uint16_t)pid.sevor2.output);
 

@@ -57,7 +57,7 @@ void RX_k210data_deal(void)
 // 	printf("x: %c, y: %c\r\n", k210.x, k210.y);
 
 // }
-#define K210_FILTER 0.3f
+#define K210_FILTER 0.9f
 
 void analysis_k210_data(u8 *buf)
 {
@@ -81,11 +81,14 @@ void analysis_k210_data(u8 *buf)
 			strncpy(y_str, comma_ptr + 1, end_ptr - comma_ptr - 1);
 
 			// 将提取到的x和y转换成数值
-			int8_t x = 112 - (int8_t)(atoi(x_str));
-			int8_t y = 112 - (int8_t)(atoi(y_str));
+			int16_t x = 160 - (int16_t)(atoi(x_str));
+			int16_t y = 112 - (int16_t)(atoi(y_str));
 			// 低通滤波
 			k210.x += K210_FILTER * ((float)x - k210.x);
 			k210.y += K210_FILTER * ((float)y - k210.y);
+
+			// k210.x = (float)x;
+			// k210.y = (float)y;
 
 			// printf("x = %.2f, y = %.2f\n", k210.x, k210.y);
 		}
@@ -212,11 +215,13 @@ static void analysis_data(u8 *buf)
 
 /*******************************
  * 修改PID
+ *
+ * 舵机环 d
  *******************************/
 static void change_pid(u8 *buf)
 {
 	static float *val;
-	// static float *val_l;
+	static float *val_l;
 
 	int8_t pidSet = 20;
 	PID *SetPID;
@@ -262,6 +267,26 @@ static void change_pid(u8 *buf)
 			break;
 		}
 		break;
+		// 舵机环
+	case 'd':
+		SetPID = &pid.sevor1;
+		pidSet = 0;
+		switch (buf[2])
+		{
+		case 'p':
+			val = &pid.sevor1.kp;
+			val_l = &pid.sevor2.kp;
+			break;
+		case 'i':
+			val = &pid.sevor1.ki;
+			val_l = &pid.sevor2.ki;
+			break;
+		case 'd':
+			val = &pid.sevor1.kd;
+			val_l = &pid.sevor2.kd;
+			break;
+		}
+		break;
 	}
 
 	if (pidSet != 20)
@@ -269,6 +294,11 @@ static void change_pid(u8 *buf)
 		// buf[0] = '\0';
 		// buf[1] = '\0';
 		*val = atof((char *)buf + 3);
+		if (val_l != NULL)
+		{
+			*val_l = atof((char *)buf + 3);
+			val_l = NULL;
+		}
 		// *val_l = atof((char *)buf + 3);
 		printf("//////////////////////////\r\nPID set P:%f I:%f D:%f\r\n\r\n", SetPID->kp, SetPID->ki, SetPID->kd);
 	}
