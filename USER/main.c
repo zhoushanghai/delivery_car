@@ -21,6 +21,14 @@
 #include "gw_gray_serial.h"
 #include "Servo.h"
 //-----(‵▽′)/----------------------  -----------------------------//
+/*
+舵机  11=1°   35
+servo1 顶端 y 750~ 2500
+90° 1550
+
+servo2 侧面 x 500~ 2500
+90° 970
+*/
 
 char str[20];
 int distanc_R = 0, distanc_L = 0;
@@ -52,11 +60,13 @@ float yaw_in180(float yaw);
 float abs_float(float a);
 //(‵▽′)/////////////////////////////////////////////////////////////////////////////////
 float angle = 90;
+
+//(‵▽′)/////////////////////////////////////  ////////////////////////////////////////////
+
 int main(void)
 {
 	software_init();
-	PWM_SetServo1(1600);
-	PWM_SetServo2(1595);
+
 	while (1)
 	{
 		if (CHECK_FLAG(&flag_G.oled))
@@ -94,14 +104,18 @@ void wave(void)
 	// car.GrayscaleData = gw_gray_serial_read(GW_GRAY_SERIAL_GPIO_GROUP, GW_GRAY_SERIAL_GPIO_CLK, GW_GRAY_SERIAL_GPIO_DAT);
 	// printf("%d\r\n", car.GrayscaleData);
 	// get_gray_data();
+
 	// 灰度值
-	printf("gray:%d\r\n", car.GrayVal);
+	// printf("gray:%d\r\n", car.GrayVal);
 
 	// printf("%d,%d,%.2f,%.2f\r\n", car.gyro_x, car.gyro_y, (float)car.gyro_z - car.ZgyOFFSET, -pid.speed_l.output + pid.angSpe.output);
 	// printf("%d,%.2f,%.2f\r\n", car.status, car.turn_set, car.dis_set);
 
 	// 巡线数据
 	// printf("XX%f\r\n", pid.gray.output);
+
+	// k210 data
+	printf("x%.2f y%.2f out%d\r\n", k210.x, k210.y, (uint16_t)pid.sevor1.output);
 }
 
 #define FILTER 0.4f
@@ -110,20 +124,39 @@ void TIM7_IRQHandler(void)
 	static float yaw_m;
 	static int i = 0;
 	static uint8_t en_cnt = 0, gray_cnt = 0;
+	static int time = 0, k210_cnt = 0;
 
 	static float speed_l_M = 0, speed_r_M = 0;
 	float yaw_PID;
 	if (TIM_GetITStatus(TIM7, TIM_IT_Update) == SET)
 	{
+		++time;
 		TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
 		//(‵▽′)///////////////////////////////////// 舵机控制 ////////////////////////////////////////////
 		if (CHECK_FLAG(&flag_G.k210))
 		{
 			RX_k210data_deal();
+			// pid cal
+			PID_Incremental(&pid.sevor1, 0, k210.y);
+			PID_Incremental(&pid.sevor2, 0, k210.x);
+			uint16_t sevorOut = (uint16_t)pid.sevor1.output;
+			printf("%d\r\n", sevorOut);
+			PWM_SetServo1((uint16_t)pid.sevor1.output);
+			PWM_SetServo2((uint16_t)pid.sevor2.output);
+
+			// get fps
+			k210_cnt++;
+			if (time >= 1000)
+			{
+				// printf("\r\n\r\nk210_cnt:%d\r\n", k210_cnt);
+				k210_cnt = 0;
+				time = 0;
+			}
 		}
 		//(‵▽′)///////////////////////////////////// 小车有刷直流电机控制 ////////////////////////////////////////////
 		if (++en_cnt >= 10)
 		{
+
 			// static int out_r = 0, out_l = 0;
 			// encoder
 			en_cnt = 0;
@@ -224,23 +257,35 @@ void TIM7_IRQHandler(void)
 void data_show(void)
 {
 	mpu_dmp_get_data(&car.roll, &car.pitch, &car.yaw);
-	sprintf(str, "pit:%5.2f roll:%5.2f yaw:%5.2f", car.pitch, car.roll, car.yaw);
-	LCD_ShowString(0, 0, str, WHITE, BLACK, 16, 0);
+	sprintf(str, "p:%5.2f r:%5.2f y:%5.2f", car.pitch, car.roll, car.yaw);
+	LCD_ShowString(0, 50, str, WHITE, BLACK, 16, 0);
+
+	sprintf(str, "x%f y%f", k210.x, k210.y);
+	LCD_ShowString(0, 10, str, WHITE, BLACK, 16, 0);
 }
 
 void software_init(void)
 {
-	flag_G.wave = 1;
+	flag_G.wave = WAVE;
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // 设置系统中断优先级分组2
 	delay_init(168);								// 初始化延时函数
 
 	uart_init(115200); // 初始化串口波特率为115200
 	LED_Init();		   // 初始化LED
 
+	PID_set(); // PID参数初始化
+
 	MPU_Init();
 	mpu_dmp_init();
 
-	PWM_TIM1_Init(); // 20ms 50Hz 舵机
+	PWM_TIM1_Init();	// 20ms 50Hz 舵机
+	PWM_SetServo1(970); // 舵机回正
+	PWM_SetServo2(1550);
+	pid.sevor1.output = 970;
+	pid.sevor2.output = 1550;
+
+	delay_ms(1000);
+
 	PWM_TIM5_Init(8400 - 1, 1 - 1);
 	Encoder_TIM2_Init();
 	Encoder_TIM3_Init();
@@ -260,13 +305,12 @@ void software_init(void)
 	LCD_Color_Fill(0, 0, 240, 240, CYAN); // 让屏幕刷青色
 	LCD_ShowString(1, 1, "hello world", WHITE, BLACK, 16, 0);
 
-	PID_set();
 	gyroOffset_init(); // 陀螺仪零飘初始化
 	spl_gw_gray_serial_init();
 	//(‵▽′)/////////////////////////////////////  ////////////////////////////////////////////
 
 	TIM4_Random_Init(1000 - 1, 84 - 1); // ms定时器
-	TIM7_Random_Init(1000 - 1, 84 - 1); // 5ms定时器
+	TIM7_Random_Init(1000 - 1, 84 - 1); // 1ms定时器
 }
 void key_(void)
 {
@@ -328,3 +372,31 @@ float abs_float(float a)
 	else
 		return a;
 }
+
+// float PlacePID_Control(PID *sprt, int32 NowPiont, int32 SetPoint)
+// {
+// 	int iError;				  // 当前误差
+// 	float Kp = 0, Actual = 0; // 动态P
+
+// 	iError = SetPoint - NowPiont;								  // 计算当前误差
+// 	Kp = 1.0 * (iError * iError) / S3010[Set][T] + S3010[Set][P]; // P值与差值成二次函数关系
+
+// 	Actual = Kp * iError + S3010[Set][D] * (iError - sprt->LastError); // 只用PD
+
+// 	sprt->LastError = iError; // 更新上次误差
+
+// 	return S3010_MID - Actual;
+// }
+
+// int32 PID_Realize(PID *sptr, int32 ActualSpeed, int32 SetSpeed)
+// {
+// 	int iError, Increase; // 当前误差     最后得出的实际增量
+
+// 	iError = SetSpeed - ActualSpeed; // 计算当前误差
+
+// 	Increase = sptr->KP * (iError - sptr->LastError) + sptr->KI * iError + sptr->KD * (iError - 2 * sptr->LastError + sptr->PrevError);
+// 	sptr->PrevError = sptr->LastError; // 更新前次误差
+// 	sptr->LastError = iError;		   // 更新上次误差
+
+// 	return Increase;
+// }

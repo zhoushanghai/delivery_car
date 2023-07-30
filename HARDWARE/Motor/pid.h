@@ -33,6 +33,11 @@
 #define GRAY_P -0.08f
 #define GRAY_I -0.0f
 #define GRAY_D -0.01f
+
+#define SEVOR_P -1.0f
+#define SEVOR_I -0.5f
+#define SEVOR_D 0.0f
+
 //(‵▽′)///////////////////////////////////// 自定义结构体 ////////////////////////////////////////////
 typedef enum
 {
@@ -58,6 +63,8 @@ typedef struct // 飞轮串级PID
     PID angSpe;           // 角加速度环
     PID dis;              // 位移环
     PID gray;             // 灰度环
+    PID sevor1;           // 舵机1环
+    PID sevor2;           // 舵机2环
     int output;           // 串级输出，等于inner.output
 } CAR_PID;
 

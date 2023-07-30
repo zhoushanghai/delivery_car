@@ -80,6 +80,8 @@ void MSR_MSP(u32 addr);  // 设置堆栈地址
 
 ///////////////////////////////////////////car data//////////////////////////////////////////////
 
+#define WAVE 1
+
 typedef enum // car status
 {
     straight,
@@ -106,6 +108,7 @@ typedef struct // 小车数据
     float XgyOFFSET, YgyOFFSET, ZgyOFFSET; // 陀螺仪零飘
     uint8_t GrayscaleData[8];              // 灰度数据
     int GrayVal;
+    int servo1_set, servo2_set; // 舵机输出值
 } CAR;
 
 typedef struct
@@ -119,7 +122,8 @@ typedef struct
 
 typedef struct
 {
-    uint8_t x, y;
+    // int8_t x, y;
+    float x, y;
 
 } K210;
 //(‵▽′)/////////////////////////////////////  ////////////////////////////////////////////
@@ -135,4 +139,3 @@ extern char str[20];
 #define EN2VAL DIS_EN * 100.0f
 
 #endif
-

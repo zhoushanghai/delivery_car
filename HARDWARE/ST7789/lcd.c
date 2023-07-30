@@ -539,7 +539,7 @@ void LCD_ShowChar(u16 x, u16 y, u8 num, u16 fc, u16 bc, u8 sizey, u8 mode)
 				mode:  0非叠加模式  1叠加模式
 	  返回值：  无
 ******************************************************************************/
-void LCD_ShowString(u16 x, u16 y, const u8 *p, u16 fc, u16 bc, u8 sizey, u8 mode)
+void LCD_ShowString(u16 x, u16 y, char *p, u16 fc, u16 bc, u8 sizey, u8 mode)
 {
 	while (*p != '\0')
 	{

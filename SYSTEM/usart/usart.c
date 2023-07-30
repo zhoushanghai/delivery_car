@@ -29,7 +29,7 @@ void RX_k210data_deal(void)
 {
 	analysis_k210_data(USART_RX_BUF_U1);
 
-	printf("K210Data:%s\r\n", USART_RX_BUF_U1);
+	// printf("K210Data:%s\r\n", USART_RX_BUF_U1);
 	// 清空缓存
 	for (int i = 0; i < 10; i++)
 	{
@@ -57,6 +57,7 @@ void RX_k210data_deal(void)
 // 	printf("x: %c, y: %c\r\n", k210.x, k210.y);
 
 // }
+#define K210_FILTER 0.3f
 
 void analysis_k210_data(u8 *buf)
 {
@@ -80,10 +81,13 @@ void analysis_k210_data(u8 *buf)
 			strncpy(y_str, comma_ptr + 1, end_ptr - comma_ptr - 1);
 
 			// 将提取到的x和y转换成数值
-			k210.x = (uint8_t)(atoi(x_str));
-			k210.y = (uint8_t)(atoi(y_str));
+			int8_t x = 112 - (int8_t)(atoi(x_str));
+			int8_t y = 112 - (int8_t)(atoi(y_str));
+			// 低通滤波
+			k210.x += K210_FILTER * ((float)x - k210.x);
+			k210.y += K210_FILTER * ((float)y - k210.y);
 
-			printf("x = %d, y = %d\n", k210.x, k210.y);
+			// printf("x = %.2f, y = %.2f\n", k210.x, k210.y);
 		}
 	}
 }
@@ -128,6 +132,19 @@ static void analysis_data(u8 *buf)
 			{
 				car.turn_set = atof((char *)buf + 1);
 				printf("//////////////////////////\r\nturn:%f\r\n\r\n", car.turn_set);
+			}
+			else if (buf[1] == 's' && buf[2] == 'e') // 舵机
+			{
+				if (buf[0] == '1')
+				{
+					car.servo1_set = atoi((char *)buf + 3);
+					printf("//////////////////////////\r\nservo1:%d\r\n\r\n", car.servo1_set);
+				}
+				else if (buf[0] == '2')
+				{
+					car.servo2_set = atoi((char *)buf + 3);
+					printf("//////////////////////////\r\nservo2:%d\r\n\r\n", car.servo2_set);
+				}
 			}
 			else if (buf[0] == '*')
 				change_pid(buf);

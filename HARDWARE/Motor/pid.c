@@ -18,6 +18,9 @@ void PID_set(void)
     PID_Init(&pid.angSpe, ANGSPE_P, ANGSPE_I, ANGSPE_D, 0.0, 0.6);
 
     PID_Init(&pid.gray, GRAY_P, GRAY_I, GRAY_D, 0.0, 0.8);
+
+    PID_Init(&pid.sevor1, SEVOR_P, SEVOR_I, SEVOR_D, 0.0, 2500);
+    PID_Init(&pid.sevor2, SEVOR_P, SEVOR_I, SEVOR_D, 0.0, 2500);
 }
 
 //(¨F¨Œ¡ä)///////////////////////////////////// ¼ÆËãº¯Êý ////////////////////////////////////////////
