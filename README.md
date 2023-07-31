@@ -1,27 +1,11 @@
-# V2.0尝试整理上传版本
-添加了.gitignore 并且忽略了OBJ/下的中间文件
 
-# V2.1 能基本巡线
-采用速度环 角速度环 和灰度巡线模块并级控制，用来一个一阶滤波让速度平滑，但是效果还行，但是不是贴别顺滑
-
-后面可以尝试角速度环和灰度巡线模块串级控制
-
-# V2.2 添加舵机模块
-
-# V2.3 新的标志位检测
-学到了一个新的标志位检测方法：
-#define CHECK_FLAG(flag) (*(flag) ? (*(flag) = 0, 1) : 0)
-
-# V2.4 K210通信
-数据格式是：
-!x，y@
-
-
-# V2.5 舵机控制
-串口控制舵机
-
-# V2.6 云台跟踪
-开源版本
+# 云台跟踪开源版本
 pid在pid.c和pid.h中
 控制函数在main.c的TIM7_IRQHandler()中断服务函数中
 希望可以帮到你，欢迎交流
+
+K210代码是根据csdn上博客写的，这里直接放上链接，需要的可以自行学习
+
+https://blog.csdn.net/csdn_rp/article/details/119730986?ops_request_misc=&request_id=f13fe360928749e6aa034887f9388af0&biz_id=&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~koosearch~default-1-119730986-null-null.268^v1^control&utm_term=k210
+
+https://blog.csdn.net/csdn_rp/article/details/119872745?ops_request_misc=&request_id=f13fe360928749e6aa034887f9388af0&biz_id=&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~koosearch~default-2-119872745-null-null.268^v1^control&utm_term=k210
