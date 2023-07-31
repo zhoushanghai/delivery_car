@@ -35,7 +35,7 @@
 #define GRAY_D -0.01f
 
 #define SEVOR_P -0.67f
-#define SEVOR_I -0.45df
+#define SEVOR_I -0.45f
 #define SEVOR_D -0.08f
 
 //(‵▽′)///////////////////////////////////// 自定义结构体 ////////////////////////////////////////////
